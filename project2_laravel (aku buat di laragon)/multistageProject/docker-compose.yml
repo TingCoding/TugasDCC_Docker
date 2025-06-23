@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multistageProject_laravel
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    networks:
+      - multistage_network
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: multistageProject_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - multistage_network
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: multistageProject_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: password
+      MYSQL_USER: laravel
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3307:3307"
+    networks:
+      - multistage_network
+
+networks:
+  multistage_network:
+    driver: bridge
+
+volumes:
+  dbdata:
